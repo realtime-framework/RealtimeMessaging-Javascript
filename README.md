@@ -16,7 +16,19 @@ If you're using Realtime on a web page, you can install the library via:
 ```html
 <script src="//messaging-public.realtime.co/js/2.1.0/ortc.js"></script>
 ```
+#### Bower
 
+```bash
+bower install realtime
+```
+
+and then
+
+```html
+<script src="bower_components/realtime/dist/ortc-min.js"></script>
+```
+
+More about Bower at [http://bower.io/](http://bower.io/)
 
 ## Quick Start Guide
 [http://messaging-public.realtime.co/documentation/starting-guide/quickstart-js.html](http://messaging-public.realtime.co/documentation/starting-guide/quickstart-js.html)

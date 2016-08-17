@@ -1,5 +1,6 @@
 {
   "name": "realtime",
+  "version": "2.1.26a",
   "location": "git@github.com:realtime-framework/RealtimeMessaging-Javascript.git",
   "description": "Realtime Cloud Messaging Client (websocket + xhr-streaming fallback)",
   "keywords": [

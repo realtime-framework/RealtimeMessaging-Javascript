@@ -3,9 +3,7 @@ Part of the [The Realtime® Framework](http://framework.realtime.co), Realtime C
 
 If your application has data that needs to be updated in the user’s interface as it changes (e.g. real-time stock quotes or ever changing social news feed) Realtime Cloud Messaging is the reliable, easy, unbelievably fast, “works everywhere” solution.
 
-We have included the source code and licences for following library:
-
-* sockjs-client
+We have included the source code and licence for the sockjs-client library.
 
 ## Installation
 

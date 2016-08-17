@@ -1,0 +1,19 @@
+{
+  "name": "realtime",
+  "location": "git@github.com:realtime-framework/RealtimeMessaging-Javascript.git",
+  "description": "Realtime Cloud Messaging Client (websocket + xhr-streaming fallback)",
+  "keywords": [
+    "realtime.co",
+    "real-time",
+    "client",
+    "websocket",
+    "http",
+    "fallback",
+    "pubsub",
+    "messaging"
+  ],
+  "licence": "MIT",
+  "authors": ["Realtime <framework@realtime.co>"],
+  "main": "./dist/ortc-min.js",
+  "ignore": ["**/*", "!/dist/*", "!LICENCE", "!README.md", "!bower.json"]
+}

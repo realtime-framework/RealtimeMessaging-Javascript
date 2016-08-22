@@ -3678,6 +3678,7 @@ function IbtRealTimeSJ() {
                 var data = e.data;
                 var channel = data.ch;
                 var message = data.m;
+                var filtered = data.f;
 
                 // Multi part
                 var regexPattern = /^(\w[^_]*)_{1}(\d*)-{1}(\d*)_{1}([\s\S.]*)$/;
@@ -3731,7 +3732,7 @@ function IbtRealTimeSJ() {
                         delete messagesBuffer[messageId];
                     }
 
-                    delegateMessagesCallback(self, channel, message);
+                    delegateMessagesCallback(self, channel, filtered, message);
                 }
             };
 
@@ -3946,9 +3947,15 @@ function IbtRealTimeSJ() {
         }
     };
 
-    var delegateMessagesCallback = function (ortc, channel, message) {
+    var delegateMessagesCallback = function (ortc, channel, filtered, message) {
         if (ortc != null && subscribedChannels[channel] && subscribedChannels[channel].isSubscribed && subscribedChannels[channel].onMessageCallback != null) {
-            subscribedChannels[channel].onMessageCallback(ortc, channel, message);
+            if(filtered == null) {
+                // regular subscription
+                subscribedChannels[channel].onMessageCallback(ortc, channel, message);
+            } else {
+                // filtered subscription
+                subscribedChannels[channel].onMessageCallback(ortc, channel, filtered, message);
+            }
         }
     };
 

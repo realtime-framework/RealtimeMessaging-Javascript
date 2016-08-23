@@ -2887,9 +2887,10 @@ function IbtRealTimeSJ() {
                         subscribedChannels[channel].isSubscribed = false;
                         subscribedChannels[channel].subscribeOnReconnected = subscribeOnReconnected;
                         subscribedChannels[channel].onMessageCallback = onMessageCallback;
+                        subscribedChannels[channel].filter = filter;
                     }
                     else {
-                        subscribedChannels[channel] = { 'isSubscribing': true, 'isSubscribed': false, 'subscribeOnReconnected': subscribeOnReconnected, 'onMessageCallback': onMessageCallback };
+                        subscribedChannels[channel] = { 'isSubscribing': true, 'isSubscribed': false, 'subscribeOnReconnected': subscribeOnReconnected, 'onMessageCallback': onMessageCallback, 'filter': filter };
                     }
                     if (regId) {
                         subscribedChannels[channel].withNotifications = true;
@@ -3816,7 +3817,11 @@ function IbtRealTimeSJ() {
                                 hashPerm = userPerms[channelToValidate] ? userPerms[channelToValidate] : userPerms[key];
                             }
 
-                            self.sockjs.send('subscribe;' + self.appKey + ';' + self.authToken + ';' + key + ';' + hashPerm);
+                            if(subscribedChannels[key].filter) {
+                                self.sockjs.send('subscribefilter;' + self.appKey + ';' + self.authToken + ';' + key + ';' + hashPerm + ';' + subscribedChannels[key].filter);
+                            } else {
+                                self.sockjs.send('subscribe;' + self.appKey + ';' + self.authToken + ';' + key + ';' + hashPerm);
+                            }                            
                         }
                         else {
                             channelsToRemove[key] = key;

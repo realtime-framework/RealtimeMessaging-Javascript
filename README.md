@@ -19,13 +19,6 @@ If you're using Realtime on a web page, you can install the library via:
 ```bash
 bower install realtime
 ```
-
-####
-
-```bash
-npm install realtime-messaging --save
-```
-
 and then
 
 ```html
@@ -33,6 +26,12 @@ and then
 ```
 
 More about Bower at [http://bower.io/](http://bower.io/)
+
+#### NPM
+
+```bash
+npm install realtime-messaging --save
+```
 
 ## Quick Start Guide
 [http://messaging-public.realtime.co/documentation/starting-guide/quickstart-js.html](http://messaging-public.realtime.co/documentation/starting-guide/quickstart-js.html)

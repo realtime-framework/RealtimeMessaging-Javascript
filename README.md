@@ -20,6 +20,12 @@ If you're using Realtime on a web page, you can install the library via:
 bower install realtime
 ```
 
+####
+
+```bash
+npm install realtime-messaging --save
+```
+
 and then
 
 ```html

@@ -1,0 +1,34 @@
+{
+  "name": "realtime-messaging",
+  "version": "2.1.30",
+  "description": "Realtime Cloud Messaging Client (websocket + xhr-streaming fallback)",
+  "main": "./dist/ortc-umd-min.js",
+  "scripts": {
+    "generateDist": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/realtime-framework/RealtimeMessaging-Javascript.git"
+  },
+  "keywords": [
+    "realtime.co",
+    "real-time",
+    "client",
+    "websocket",
+    "http",
+    "fallback",
+    "pubsub",
+    "messaging"
+  ],
+  "author": "Realtime <framework@realtime.co>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/realtime-framework/RealtimeMessaging-Javascript/issues"
+  },
+  "homepage": "https://github.com/realtime-framework/RealtimeMessaging-Javascript#readme",
+  "devDependencies": {
+    "babel-core": "6.14.0",
+    "babel-loader": "6.2.5",
+    "webpack": "^1.13.2"
+  }
+}

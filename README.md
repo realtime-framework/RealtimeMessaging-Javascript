@@ -33,6 +33,23 @@ More about Bower at [http://bower.io/](http://bower.io/)
 npm install realtime-messaging --save
 ```
 
+and then
+
+```javascript
+import Realtime from 'realtime-messaging';
+Realtime.loadOrtcFactory(Realtime.IbtRealTimeSJType, (factory, error) => {
+	if(!error) {
+   		this.realtime = factory.createClient();
+    	this.realtime.setClusterUrl("http://ortc-developers.realtime.co/server/2.1/");
+    	this.realtime.connect('YOUR_APPKEY', 'token');
+
+    	this.realtime.onConnected = (client) => {
+      		console.log("realtime connected");
+    	}
+	}
+})
+```
+
 ## Quick Start Guide
 [http://messaging-public.realtime.co/documentation/starting-guide/quickstart-js.html](http://messaging-public.realtime.co/documentation/starting-guide/quickstart-js.html)
 

@@ -181,12 +181,12 @@ function IbtRealTimeSJ() {
   this.setHeartbeatTime = function (newHeartbeatTime) {
     if (newHeartbeatTime && !isNaN(newHeartbeatTime)){
       if (newHeartbeatTime > heartbeatMaxTime || newHeartbeatTime < heartbeatMinTime){
-        delegateExceptionCallback(ortc, `Heartbeat time is out of limits - Min: ${heartbeatMinTime} | Max: ${heartbeatMaxTime}`);
+        delegateExceptionCallback(ortc, 'Heartbeat time is out of limits - Min: ${heartbeatMinTime} | Max: ${heartbeatMaxTime}');
       } else {
         heartbeatTime = newHeartbeatTime;
       }
     } else {
-      delegateExceptionCallback(ortc, `Invalid heartbeat time ${newHeartbeatTime}`);
+      delegateExceptionCallback(ortc, 'Invalid heartbeat time ${newHeartbeatTime}');
     }
   };
 
@@ -203,12 +203,12 @@ function IbtRealTimeSJ() {
   this.setHeartbeatFails = function (newHeartbeatFails) {
     if (newHeartbeatFails && !isNaN(newHeartbeatFails)) {
       if (newHeartbeatFails > heartbeatMaxFails || newHeartbeatFails < heartbeatMinFails){
-        delegateExceptionCallback(ortc, `Heartbeat fails is out of limits - Min: ${heartbeatMinFails} | Max: ${heartbeatMaxFails}`);
+        delegateExceptionCallback(ortc, 'Heartbeat fails is out of limits - Min: ${heartbeatMinFails} | Max: ${heartbeatMaxFails}');
       } else {
         heartbeatFails = newHeartbeatFails;
       }
     } else {
-      delegateExceptionCallback(ortc, `Invalid heartbeat fails ${newHeartbeatFails}`);
+      delegateExceptionCallback(ortc, 'Invalid heartbeat fails ${newHeartbeatFails}');
     }
   };
 

@@ -1128,6 +1128,9 @@ SockJS.prototype._dispatchMessage = function(data) {
         case "ortc-error":
             that.dispatchEvent(new SimpleEvent("ortcerror", {data: data.ex}));
             break;
+        case "ortc-ack":
+            that.dispatchEvent(new SimpleEvent("ortcack", {msgId: data.m, msgPart: data.p, curSeq: data.seq, err: data.err}));
+            break;
         default:
             that.dispatchEvent(new SimpleEvent("message", {data: data}));
             break;
@@ -2523,6 +2526,8 @@ function IbtRealTimeSJ() {
     var sessionId;                  // the session ID
     var registrationId;             // browser device token for push notifications
     var pushPlatform;                   // push notifications platform
+    var pendingPublishMessages;     // hash with the messages pending publish acknowledge from server
+    var publishTimeout;             // Publish method timeout in miliseconds
 
     /***********************************************************
     * @attributes initialization
@@ -2556,6 +2561,7 @@ function IbtRealTimeSJ() {
 
     messagesBuffer = {};
     subscribedChannels = {};
+    pendingPublishMessages = {};
 
     isConnected = false;
     isConnecting = false;
@@ -2572,6 +2578,8 @@ function IbtRealTimeSJ() {
 
     protocol = undefined;
     pushPlatform = 'GCM';
+
+    publishTimeout = 5000;
 
 
     /***********************************************************
@@ -2656,6 +2664,9 @@ function IbtRealTimeSJ() {
     this.setHeartbeatActive = function(active){
         heartbeatActive = active;
     }
+
+    this.getPublishTimeout = function () { return publishTimeout; };
+    this.setPublishTimeout = function (newTimeout) { publishTimeout = newTimeout; };
 
     /***********************************************************
     * @events
@@ -2834,6 +2845,35 @@ function IbtRealTimeSJ() {
         this._subscribe(channel, subscribeOnReconnected, null, null, onMessageCallback);
     };
 
+    /*
+    * Subscribes to the channel using at-least-once delivery mode (buffered messages)
+    */
+    this.subscribeWithBuffer = function(channel, subscriberId, onMessageWithBufferCallback){
+        if(subscriberId) {
+            var options = {
+                channel: channel,
+                subscribeOnReconnected: true,
+                subscriberId: subscriberId
+            }
+
+            this.subscribeWithOptions(options, function(ortc, msgOptions) {
+                onMessageWithBufferCallback(ortc, msgOptions.channel, msgOptions.seqId, msgOptions.message);
+            });
+        } else {
+            delegateExceptionCallback(ortc, 'subscribeWithBuffer called with no subscriberId');
+        }        
+    }
+
+    /*
+    * Subscribes to the channel with multiple options
+    */
+    this.subscribeWithOptions = function (options, onMessageWithOptionsCallback){
+        if(options) {
+            this._subscribeOptions(options.channel, options.subscribeOnReconnected, options.regId, options.filter, options.subscriberId, onMessageWithOptionsCallback);
+        } else {
+            delegateExceptionCallback(ortc, 'subscribeWithOptions called with no options');
+        }
+    };
 
 
     this._subscribe = function(channel, subscribeOnReconnected, regId, filter, onMessageCallback) {
@@ -2908,6 +2948,102 @@ function IbtRealTimeSJ() {
             }
         }
     };
+
+    this._subscribeOptions = function(channel, subscribeOnReconnected, regId, filter, subscriberId, onMessageCallback) {
+        /*
+        Sanity Checks
+        */
+        if (!isConnected) {
+            delegateExceptionCallback(ortc, 'Not connected');
+        }
+        else if (!channel) {
+            delegateExceptionCallback(ortc, 'Channel is null or empty');
+        }
+        else if (!ortcIsValidInput(channel)) {
+            delegateExceptionCallback(ortc, 'Channel has invalid characters');
+        }
+        else if (!ortcIsValidInput(subscriberId)) {
+            delegateExceptionCallback(ortc, 'subscriberId has invalid characters');
+        }
+        else if (subscribedChannels[channel] && subscribedChannels[channel].isSubscribing) {
+            delegateExceptionCallback(ortc, 'Already subscribing to the channel \'' + channel + '\'');
+        }
+        else if (subscribedChannels[channel] && subscribedChannels[channel].isSubscribed) {
+            delegateExceptionCallback(ortc, 'Already subscribed to the channel \'' + channel + '\'');
+        }
+        else if (channel.length > channelMaxSize) {
+            delegateExceptionCallback(ortc, 'Channel size exceeds the limit of ' + channelMaxSize + ' characters');
+        }
+        else if (!ortcIsFunction(onMessageCallback)) {
+            delegateExceptionCallback(ortc, 'The argument \'onMessageCallback\' must be a function');
+        }
+        else {
+            
+            if (!subscribeOnReconnected) {
+                subscribeOnReconnected = true;
+            }
+
+            if(!regId) {
+                regId = '';
+            }
+
+            if(!filter) {
+                filter = '';
+            }
+
+            if(!subscriberId) {
+                subscriberId = '';
+            }
+
+            if (ortc.sockjs != null) {
+                var domainChannelCharacterIndex = channel.indexOf(':');
+                var channelToValidate = channel;
+                var hashPerm = null;
+
+                if (domainChannelCharacterIndex > 0) {
+                    channelToValidate = channel.substring(0, domainChannelCharacterIndex + 1) + '*';
+                }
+
+                if (userPerms && userPerms != null) {
+                    hashPerm = userPerms[channelToValidate] ? userPerms[channelToValidate] : userPerms[channel];
+                }
+
+                if (userPerms && userPerms != null && !hashPerm) {
+                    delegateExceptionCallback(ortc, 'No permission found to subscribe to the channel \'' + channel + '\'');
+                }
+                else {
+                    if (subscribedChannels[channel]) {
+                        subscribedChannels[channel].isSubscribing = true;
+                        subscribedChannels[channel].isSubscribed = false;
+                        subscribedChannels[channel].subscribeOnReconnected = subscribeOnReconnected;
+                        subscribedChannels[channel].onMessageCallback = onMessageCallback;
+                        subscribedChannels[channel].filter = filter;
+                        subscribedChannels[channel].withOptions = true;
+                        subscribedChannels[channel].subscriberId = subscriberId;
+                    }
+                    else {
+                        subscribedChannels[channel] = { 
+                            'isSubscribing': true, 
+                            'isSubscribed': false, 
+                            'subscribeOnReconnected': subscribeOnReconnected, 
+                            'onMessageCallback': onMessageCallback, 
+                            'filter': filter,
+                            'withOptions': true,
+                            'subscriberId': subscriberId 
+                        };
+                    }
+
+                    if (regId) {
+                        subscribedChannels[channel].withNotifications = true;
+                    }else{
+                        subscribedChannels[channel].withNotifications = false;
+                    }
+
+                    ortc.sockjs.send('subscribeoptions;' + ortc.appKey + ';' + ortc.authToken + ';' + channel + ';' + subscriberId + ';' + regId + ';' + pushPlatform + ';' + hashPerm  + ';' + filter);
+                }
+            }
+        }
+    };
     
 
     /*
@@ -2943,32 +3079,34 @@ function IbtRealTimeSJ() {
         }
     };
 
-    /*
-    * Sends the message to the channel.
-    */
-    this.send = function (channel, message) {
+    this._sendWithMethod = function(channel, message, method, ttl, callback) {
         /*
         Sanity Checks
         */
+
+        var err;
+
         if (!isConnected || ortc.sockjs == null) {
-            delegateExceptionCallback(ortc, 'Not connected');
+            err = 'Not connected';
+        }
+        else if (!method) {
+            err = 'Send Method is null or empty';
         }
         else if (!channel) {
-            delegateExceptionCallback(ortc, 'Channel is null or empty');
+            err = 'Channel is null or empty';
         }
         else if (!ortcIsValidInput(channel)) {
-            delegateExceptionCallback(ortc, 'Channel has invalid characters');
+            err = 'Channel has invalid characters';
         }
         else if (!message) {
-            delegateExceptionCallback(ortc, 'Message is null or empty');
+            err = 'Message is null or empty';
         }
         else if (!ortcIsString(message)) {
-            delegateExceptionCallback(ortc, 'Message must be a string');
+            err = 'Message must be a string';
         }
         else if (channel.length > channelMaxSize) {
-            delegateExceptionCallback(ortc, 'Channel size exceeds the limit of ' + channelMaxSize + ' characters');
-        }
-        else {
+            err = 'Channel size exceeds the limit of ' + channelMaxSize + ' characters';
+        } else {
             var domainChannelCharacterIndex = channel.indexOf(':');
             var channelToValidate = channel;
             var hashPerm = null;
@@ -2982,7 +3120,7 @@ function IbtRealTimeSJ() {
             }
 
             if (userPerms && userPerms != null && !hashPerm) {
-                delegateExceptionCallback(ortc, 'No permission found to send to the channel \'' + channel + '\'');
+                err = 'No permission found to send to the channel \'' + channel + '\'';
             }
             else {
                 // Multi part
@@ -3003,11 +3141,90 @@ function IbtRealTimeSJ() {
                     }
                 }
 
-                for (var j = 1; j <= messageParts.length; j++) {
-                    ortc.sockjs.send('send;' + ortc.appKey + ';' + ortc.authToken + ';' + channel + ';' + hashPerm + ';' + messageId + '_' + j + '-' + messageParts.length + '_' + messageParts[j - 1]);
+                if(method === "publish") {
+                    if(pendingPublishMessages[messageId]) {
+                        err = "Message id conflict. Please retry publishing the message"
+                    } else {
+
+                        if(!ttl) {
+                            ttl = 0;
+                        }
+
+                        // check for acknowledge timeout
+                        var ackTimeout = setTimeout(function() {
+                            if(pendingPublishMessages[messageId]) {
+                                var err = "Message publish timeout after " + publishTimeout / 1000 + " seconds";
+                                if(pendingPublishMessages[messageId].callback) {
+                                    pendingPublishMessages[messageId].callback(err);
+                                }
+                                delete pendingPublishMessages[messageId];
+                            }
+                        }, publishTimeout);
+
+                        var pendingMsg = {
+                            totalNumOfParts: messageParts.length,
+                            callback: callback,
+                            timeout: ackTimeout
+                        };
+
+                        pendingPublishMessages[messageId] = pendingMsg;
+
+                    }
+                }
+
+                if(!err) {
+                    if(method === 'publish') {
+                        if (messageParts.length < 20) {
+                            for (var j = 1; j <= messageParts.length; j++) {
+                                ortc.sockjs.send('publish;' + ortc.appKey + ';' + ortc.authToken + ';' + channel + ';' + ttl + ';' + hashPerm + ';' + messageId + '_' + j + '-' + messageParts.length + '_' + messageParts[j - 1]);
+                            }
+                        } else {
+                            // throttle send to 10 parts/sec to avoid server rate limiting
+                            var partsSent = 0;
+                            var partSendInterval = setInterval(function() {
+                                if(isConnected && ortc.sockjs) {
+                                    var currentPart = partsSent + 1;
+                                    var totalParts = messageParts.length;
+                                    ortc.sockjs.send('publish;' + ortc.appKey + ';' + ortc.authToken + ';' + channel + ';' + ttl + ';' + hashPerm + ';' + messageId + '_' + currentPart + '-' + totalParts + '_' + messageParts[currentPart - 1]);
+                                    partsSent++;
+
+                                    if(partsSent === messageParts.length) {
+                                        clearInterval(partSendInterval);
+                                    }
+                                } else {
+                                    // socket was disconnected, stop sending
+                                    clearInterval(partSendInterval);
+                                }                                
+                            }, 100);
+                        }
+                    } else {
+                        // send
+                        for (var j = 1; j <= messageParts.length; j++) {
+                            ortc.sockjs.send(method + ';' + ortc.appKey + ';' + ortc.authToken + ';' + channel + ';' + hashPerm + ';' + messageId + '_' + j + '-' + messageParts.length + '_' + messageParts[j - 1]);
+                        }
+                    }
                 }
             }
         }
+
+        if (err) {
+            delegateExceptionCallback(ortc, err);
+            callback(err);
+        } 
+    }
+
+    /*
+    * Sends the message to the channel using send method (at-most-once delivery semantics)
+    */
+    this.send = function (channel, message) {
+        this._sendWithMethod(channel, message, "send");
+    };
+
+    /*
+    * Sends the message to the channel using publish method (at-least-once delivery semantics)
+    */
+    this.publish = function (channel, message, ttl, callback) {
+        this._sendWithMethod(channel, message, "publish", ttl, callback);
     };
 
     /*
@@ -3104,6 +3321,16 @@ function IbtRealTimeSJ() {
     this.disconnect = function () {
         clearReconnectInterval();
         stopReconnectProcess();
+
+        // Clear pending messages and their timeouts (if any)
+        for (var messageId in pendingPublishMessages) {
+          if (pendingPublishMessages.hasOwnProperty(messageId)) {
+            if(pendingPublishMessages[messageId].timeout) {
+                clearTimeout(pendingPublishMessages[messageId].timeout);
+            }
+            delete pendingPublishMessages[messageId];
+          }
+        }
 
         // Clear subscribed channels
         subscribedChannels = {};
@@ -3680,6 +3907,7 @@ function IbtRealTimeSJ() {
                 var channel = data.ch;
                 var message = data.m;
                 var filtered = data.f;
+                var seqId = data.s;
 
                 // Multi part
                 var regexPattern = /^(\w[^_]*)_{1}(\d*)-{1}(\d*)_{1}([\s\S.]*)$/;
@@ -3733,7 +3961,13 @@ function IbtRealTimeSJ() {
                         delete messagesBuffer[messageId];
                     }
 
-                    delegateMessagesCallback(self, channel, filtered, message);
+                    delegateMessagesCallback(self, channel, filtered, message, seqId);
+                }
+
+                // send acknowledge
+                if(messageId && seqId != null) {
+                    var haveAllParts = lastPart ? "1" : "0";
+                    self.sockjs.send('ack;' + self.appKey + ';' + channel + ';' + messageId + ';' + seqId + ';' + haveAllParts);
                 }
             };
 
@@ -3817,7 +4051,12 @@ function IbtRealTimeSJ() {
                                 hashPerm = userPerms[channelToValidate] ? userPerms[channelToValidate] : userPerms[key];
                             }
 
-                            if(subscribedChannels[key].filter) {
+                            if(subscribedChannels[key].withOptions) {
+                                var filter = subscribedChannels[key].filter;
+                                var subscriberId = subscribedChannels[key].subscriberId;
+                                var regId = ""; // don't resubscribe with notifications
+                                ortc.sockjs.send('subscribeoptions;' + self.appKey + ';' + self.authToken + ';' + key + ';' + subscriberId + ';' + regId + ';' + self.pushPlatform + ';' + hashPerm  + ';' + filter);
+                            } else if(subscribedChannels[key].filter) {
                                 self.sockjs.send('subscribefilter;' + self.appKey + ';' + self.authToken + ';' + key + ';' + hashPerm + ';' + subscribedChannels[key].filter);
                             } else {
                                 self.sockjs.send('subscribe;' + self.appKey + ';' + self.authToken + ';' + key + ';' + hashPerm);
@@ -3887,6 +4126,32 @@ function IbtRealTimeSJ() {
                         break;
                 }
             };
+
+            self.sockjs.onortcack = function (e) {
+                var msgId = e.msgId;
+                var msgPart = e.msgPart;
+                var curSequenceId = e.curSeq;
+                var err = e.err;
+                var pendingMsg = pendingPublishMessages[msgId];
+
+                if(pendingMsg) {
+                    // clear pending ack timeout
+                    clearTimeout(pendingMsg.timeout);
+
+                    if(err) {
+                        delete pendingPublishMessages[msgId];
+                        if(pendingMsg.callback) {
+                            pendingMsg.callback(err);
+                        }
+                    } else if(msgPart === pendingMsg.totalNumOfParts) {
+                        // all message parts acknowledged
+                        delete pendingPublishMessages[msgId];
+                        if(pendingMsg.callback) {
+                            pendingMsg.callback(null, curSequenceId);
+                        }
+                    }
+                }
+            }
         }
 
         return self.sockjs;
@@ -3952,14 +4217,28 @@ function IbtRealTimeSJ() {
         }
     };
 
-    var delegateMessagesCallback = function (ortc, channel, filtered, message) {
+    var delegateMessagesCallback = function (ortc, channel, filtered, message, seqId) {
         if (ortc != null && subscribedChannels[channel] && subscribedChannels[channel].isSubscribed && subscribedChannels[channel].onMessageCallback != null) {
-            if(filtered == null) {
-                // regular subscription
-                subscribedChannels[channel].onMessageCallback(ortc, channel, message);
+            var withOptions = subscribedChannels[channel].withOptions;
+
+            if(withOptions) {
+                // subscription using options 
+                var messageObj = {
+                    channel: channel,
+                    seqId: seqId,
+                    filtered: filtered,
+                    message: message
+                }
+
+                subscribedChannels[channel].onMessageCallback(ortc, messageObj);
             } else {
-                // filtered subscription
-                subscribedChannels[channel].onMessageCallback(ortc, channel, filtered, message);
+                if(filtered == null) {
+                    // regular subscription
+                    subscribedChannels[channel].onMessageCallback(ortc, channel, message);
+                } else {
+                    // filtered subscription
+                    subscribedChannels[channel].onMessageCallback(ortc, channel, filtered, message);
+                }
             }
         }
     };

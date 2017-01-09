@@ -4182,7 +4182,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = {
 	  IbtRealTimeSJType: "IbtRealTimeSJ",
-	  loadOrtcFactory: loadOrtcFactory
+	  loadOrtcFactory: loadOrtcFactory,
+	  createClient: function () {
+	    return new IbtRealTimeSJ();
+	  }
 	};
 
 /***/ }

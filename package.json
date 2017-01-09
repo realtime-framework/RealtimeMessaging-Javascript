@@ -3,6 +3,7 @@
   "version": "2.1.32",
   "description": "Realtime Cloud Messaging Client (websocket + xhr-streaming fallback)",
   "main": "./dist/ortc-umd-min.js",
+  "typings": "./ortc.umd",
   "scripts": {
     "generateDist": "webpack"
   },

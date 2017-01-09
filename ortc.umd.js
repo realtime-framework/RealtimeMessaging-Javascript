@@ -4250,5 +4250,8 @@ var loadOrtcFactory = function(ortcType, loadedCallback) {
 
 module.exports = {
   IbtRealTimeSJType: "IbtRealTimeSJ",
-  loadOrtcFactory: loadOrtcFactory
+  loadOrtcFactory: loadOrtcFactory,
+  createClient: function () {
+    return new IbtRealTimeSJ();
+  }
 };

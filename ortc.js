@@ -4264,3 +4264,10 @@ function IbtRealTimeSJ() {
 };
 
 //=====================IbtRealTimeSJ.js============================
+
+// For easier usage of the default client type (without factory instance)
+var RealtimeMessaging = {
+    createClient: function () {
+        return new IbtRealTimeSJ();
+    } 
+};

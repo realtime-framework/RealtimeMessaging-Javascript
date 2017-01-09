@@ -14,6 +14,22 @@ If you're using Realtime on a web page, you can install the library via:
 ```html
 <script src="//messaging-public.realtime.co/js/2.1.0/ortc.js"></script>
 ```
+
+Usage:
+
+```javascript
+var client = RealtimeMessaging.createClient();
+client.setClusterUrl("http://ortc-developers.realtime.co/server/2.1/");
+client.connect('YOUR_APPKEY', 'token');
+
+client.onConnected = function(client) {
+    console.log("realtime connected");
+    client.subscribe("channel", true, function(client, channel, message) {
+        console.log("Received message:", message);
+    });
+}
+```
+
 #### Bower
 
 ```bash
@@ -36,18 +52,18 @@ npm install realtime-messaging --save
 and then
 
 ```javascript
-import Realtime from 'realtime-messaging';
-Realtime.loadOrtcFactory(Realtime.IbtRealTimeSJType, (factory, error) => {
-	if(!error) {
-   		this.realtime = factory.createClient();
-    	this.realtime.setClusterUrl("http://ortc-developers.realtime.co/server/2.1/");
-    	this.realtime.connect('YOUR_APPKEY', 'token');
+import * as RealtimeMessaging from 'realtime-messaging';
 
-    	this.realtime.onConnected = (client) => {
-      		console.log("realtime connected");
-    	}
-	}
-})
+const client = RealtimeMessaging.createClient();
+client.setClusterUrl("http://ortc-developers.realtime.co/server/2.1/");
+client.connect('YOUR_APPKEY', 'token');
+
+client.onConnected = (client) => {
+    console.log("realtime connected");
+    client.subscribe("channel", true, (client, channel, message) => {
+        console.log("Received message:", message);
+    });
+}
 ```
 
 ## Quick Start Guide

@@ -1,23 +1,23 @@
 
-export class factory {
-    createClient(): client;
+export class Factory {
+    createClient(): Client;
 }
 
-export interface subscribeOptions {
+export interface SubscribeOptions {
 	channel: string; 
 	subscribeOnReconnected?: boolean; 
 	filter?: string;
 	subscriberId?: string;
 }
 
-export interface messageOptions {
+export interface MessageOptions {
 	channel: string; 
 	seqId: string; 
 	filtered: boolean;
 	message: string;
 }
 
-export interface presenceParameters {
+export interface PresenceParameters {
 	applicationKey?: string;
 	authenticationToken?: string;
 	channel: string;
@@ -25,12 +25,12 @@ export interface presenceParameters {
 	url?: string;
 }
 
-export interface presenceResult {
+export interface PresenceResult {
 	metadata?: { [metadata: string]: number };
 	subscriptions: number;
 }
 
-export class client {
+export class Client {
 	setClusterUrl(url: string): void;
 	getAnnouncementSubChannel(): string;
 	getClusterUrl(): string;
@@ -45,7 +45,7 @@ export class client {
 	getUrl(): string;
 	getIsConnected(): boolean;
 	isSubscribed(channel: string): boolean;
-	presence(params: presenceParameters, callback: (error: string, result: presenceResult) => void): void;
+	presence(params: PresenceParameters, callback: (error: string, result: PresenceResult) => void): void;
 	setAnnouncementSubChannel(channel: string): void;
 	setConnectionMetadata(connectionMetadata: string): void;
 	setConnectionTimeout(connectionTimeout: number): void;
@@ -58,21 +58,21 @@ export class client {
 	getPublishTimeout(): number;
   	setPublishTimeout(newTimeout: number): void;
 
-	onConnected(ortc: client): void;
-	onDisconnected(ortc: client): void;
-	onException(ortc: client, exception: string): void;
-	onReconnected(ortc: client): void;
-	onReconnecting(ortc: client): void;
-	onSubscribed(ortc: client, channel: string): void;
-	onUnsubscribed(ortc: client, channel: string): void;
+	onConnected(ortc: Client): void;
+	onDisconnected(ortc: Client): void;
+	onException(ortc: Client, exception: string): void;
+	onReconnected(ortc: Client): void;
+	onReconnecting(ortc: Client): void;
+	onSubscribed(ortc: Client, channel: string): void;
+	onUnsubscribed(ortc: Client, channel: string): void;
 
 	connect(appkey: string, token: string): void;	
-	subscribe(channel: string, subscribeOnReconnected: boolean, onMessageCallback: (ortc: client, channel: string, message: string) => void): void;
-	subscribeWithFilter(channel: string, subscribeOnReconnected: boolean, filter: string, onMessageWithFilter: (ortc: client, channel:string, filtered: boolean, message: string) => void): void;
+	subscribe(channel: string, subscribeOnReconnected: boolean, onMessageCallback: (ortc: Client, channel: string, message: string) => void): void;
+	subscribeWithFilter(channel: string, subscribeOnReconnected: boolean, filter: string, onMessageWithFilter: (ortc: Client, channel:string, filtered: boolean, message: string) => void): void;
 
-	subscribeWithBuffer(channel: string, subscriberId: string, onMessageWithBuffer: (ortc: client, channel: string, seqId: string, message: string) => void): void;
+	subscribeWithBuffer(channel: string, subscriberId: string, onMessageWithBuffer: (ortc: Client, channel: string, seqId: string, message: string) => void): void;
 
-	subscribeWithOptions(options: subscribeOptions, onMessageWithOptions: (ortc: client, msgOptions: messageOptions) => void): void;
+	subscribeWithOptions(options: SubscribeOptions, onMessageWithOptions: (ortc: Client, msgOptions: MessageOptions) => void): void;
 
 	send(channel: string, message: string): void;
 	publish(channel: string, message: string, ttl: number, resultCallback: (err: string, seqId: string) => void): void;
@@ -83,5 +83,5 @@ export class client {
 }
 
 export const IbtRealTimeSJType: string;
-export function createClient(): client;
-export function loadOrtcFactory(type: string, callback: (factory: factory, error: string) => void) : void;
+export function createClient(): Client;
+export function loadOrtcFactory(type: string, callback: (factory: Factory, error: string) => void) : void;

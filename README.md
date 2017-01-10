@@ -79,13 +79,13 @@ realtime.onConnected = onConnected;
 realtime.onException = onException;
  
 // Realtime connection is established
-onConnected(client: Realtime.client) {
+onConnected(client: Realtime.Client) {
     // subscribe a channel to receive messages
     client.subscribe("myChannel", true, onMessage);
 }
  
 // A new message was received
-onMessage(client: Realtime.client, channel: string, message: string) {
+onMessage(client: Realtime.Client, channel: string, message: string) {
     console.log("Received message:", message);
 }
 ```

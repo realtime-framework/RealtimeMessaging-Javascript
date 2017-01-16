@@ -1,6 +1,6 @@
 {
   "name": "realtime-messaging",
-  "version": "2.1.36",
+  "version": "2.1.38",
   "description": "Realtime Cloud Messaging Client (websocket + xhr-streaming fallback)",
   "main": "./dist/ortc-umd-min.js",
   "typings": "./ortc.umd",

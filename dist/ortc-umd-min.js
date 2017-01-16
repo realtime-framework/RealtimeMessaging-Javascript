@@ -658,6 +658,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        } else {
 	          ortc.sockjs.send("unsubscribe;" + ortc.appKey + ";" + channel);
 	        }
+
+	        subscribedChannels[channel].isSubscribed = false;
 	      }
 	    }
 	  };
@@ -1539,10 +1541,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        lastKeepAlive = new Date().getTime();
 
 	        var channel = e.data;
-
-	        if (subscribedChannels[channel]) {
-	          subscribedChannels[channel].isSubscribed = false;
-	        }
 
 	        delegateUnsubscribedCallback(self, channel);
 	      };

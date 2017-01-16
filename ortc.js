@@ -3075,6 +3075,7 @@ function IbtRealTimeSJ() {
                 }else{
                     ortc.sockjs.send('unsubscribe;' + ortc.appKey + ';' + channel);
                 }
+                subscribedChannels[channel].isSubscribed = false;
             }
         }
     };
@@ -3988,11 +3989,6 @@ function IbtRealTimeSJ() {
                 lastKeepAlive = new Date().getTime();
 
                 var channel = e.data;
-
-                if (subscribedChannels[channel]) {
-                    subscribedChannels[channel].isSubscribed = false;
-                }
-
                 delegateUnsubscribedCallback(self, channel)
             };
 

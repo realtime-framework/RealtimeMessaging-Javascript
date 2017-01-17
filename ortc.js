@@ -3210,7 +3210,9 @@ function IbtRealTimeSJ() {
 
         if (err) {
             delegateExceptionCallback(ortc, err);
-            callback(err);
+            if(callback) {
+                callback(err);
+            }
         } 
     }
 

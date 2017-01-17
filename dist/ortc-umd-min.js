@@ -786,7 +786,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    if (err) {
 	      delegateExceptionCallback(ortc, err);
-	      callback(err);
+	      if (callback) {
+	        callback(err);
+	      }
 	    }
 	  };
 

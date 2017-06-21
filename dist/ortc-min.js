@@ -3,7 +3,7 @@
 //
 // Visit us at framework.realtime.co and learn more.
 //
-// Date: Tue Jan 17 2017 13:30 v2.1.40
+// Date: Wed Jun 21 2017 13:30 v2.1.42
 
 var IbtRealTimeSJType="IbtRealTimeSJ";function loadOrtcFactory(k,l){var a=new OrtcFactory(k);l(a,null)}function OrtcFactory(){this.createClient=function(){return new IbtRealTimeSJ}}function OrtcError(k){this.code=k;switch(k){case 3:this.message="Is not possible to load more than one factory of each ORTC type";break;case 4:this.message="Unknown ORTC type";break;default:this.message="Unknown error"}}
 String.prototype.ortcTreatUrl=function(){var k=this;k&&(k=k.replace(/\s+/g,""),"/"==k.charAt(k.length-1)&&(k=k.substring(0,k.length-1)));return k};function ortcIsValidUrl(k){return/^\s*(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?\s*$/.exec(k)?!0:!1}function ortcIsValidInput(k){return/^[\w-:\/\.]*$/.exec(k)?!0:!1}function ortcIsValidBoolean(k){return/^(true|false|0|1)$/.exec(k)?!0:!1}function ortcIsFunction(k){return"function"==typeof k?!0:!1}

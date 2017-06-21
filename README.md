@@ -66,27 +66,37 @@ client.onConnected = (client) => {
 }
 ```
 
-## TypeScript usage
+## TypeScript usage in Angular4
 
 ```typescript
+import {Component, OnInit} from '@angular/core';
 import * as Realtime from 'realtime-messaging';
- 
-const realtime = Realtime.createClient();
-realtime.setClusterUrl("https://ortc-developers.realtime.co/server/ssl/2.1/");
-realtime.connect("YOUR_APPKEY", "SomeSecurityToken");
- 
-realtime.onConnected = onConnected;
-realtime.onException = onException;
- 
-// Realtime connection is established
-onConnected(client: Realtime.Client) {
-    // subscribe a channel to receive messages
-    client.subscribe("myChannel", true, onMessage);
-}
- 
-// A new message was received
-onMessage(client: Realtime.Client, channel: string, message: string) {
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+
+export class AppComponent  {
+  
+  constructor() {
+    const realtime = Realtime.createClient();
+    realtime.setClusterUrl("https://ortc-developers.realtime.co/server/ssl/2.1/");
+    realtime.connect("YOUR_APPKEY", "SomeSecurityToken");
+
+    realtime.onConnected = (client: Realtime.Client) => {
+      console.log("connected");
+      
+      // subscribe a channel to receive message
+      client.subscribe("myChannel", true, this.onMessage);
+    } 
+  }
+
+  // A new message was received
+  onMessage(client: Realtime.Client, channel: string, message: string) {
     console.log("Received message:", message);
+  }
 }
 ```
 
